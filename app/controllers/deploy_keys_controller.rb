@@ -3,23 +3,27 @@ class DeployKeysController < ProjectResourceController
 
   # Authorize
   before_filter :authorize_admin_project!
-
+  
   def index
-    @keys = @project.deploy_keys.all
+    @keys = Key.deploy_keys
+    @keys.each { |k| k.remove_dups @project }
   end
 
   def show
-    @key = @project.deploy_keys.find(params[:id])
+    @rel = KeyRelationship.find(params[:id])
+    @key = @rel.key
   end
 
   def new
-    @key = @project.deploy_keys.new
+    @key = Key.new
 
     respond_with(@key)
   end
 
   def create
-    @key = @project.deploy_keys.new(params[:key])
+    @key = Key.new(params[:key])
+    @key.project_ids = [@project.id]
+
     if @key.save
       redirect_to project_deploy_keys_path(@project)
     else
@@ -28,8 +32,8 @@ class DeployKeysController < ProjectResourceController
   end
 
   def destroy
-    @key = @project.deploy_keys.find(params[:id])
-    @key.destroy
+    @key = Key.find(params[:id])
+    @key.destroy unless @key.has_relationships?
 
     respond_to do |format|
       format.html { redirect_to project_deploy_keys_url }

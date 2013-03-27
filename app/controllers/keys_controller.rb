@@ -18,6 +18,7 @@ class KeysController < ApplicationController
 
   def create
     @key = current_user.keys.new(params[:key])
+    @key.build_key_relationship(user_id: current_user.id)
     @key.save
 
     respond_with(@key)
@@ -25,6 +26,7 @@ class KeysController < ApplicationController
 
   def destroy
     @key = current_user.keys.find(params[:id])
+    @key.key_relationship.destroy
     @key.destroy
 
     respond_to do |format|

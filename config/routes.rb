@@ -117,6 +117,7 @@ Gitlab::Application.routes.draw do
   end
 
   resources :keys
+  resources :key_relationships
   match "/u/:username" => "users#show", as: :user, constraints: { username: /.*/ }
 
 

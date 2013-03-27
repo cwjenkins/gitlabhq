@@ -8,5 +8,4 @@
       = time_ago_in_words(key.created_at)
       ago
   %td
-    = link_to 'Remove', key, confirm: 'Are you sure?', method: :delete, class: "btn btn-small btn-remove delete-key pull-right"
-
+    = link_to 'Remove', key_path(key), confirm: 'Are you sure?', method: :delete, class: "btn btn-remove delete-key btn-small pull-right"

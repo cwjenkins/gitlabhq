@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20130318212250) do
+ActiveRecord::Schema.define(:version => 20130325010343) do
 
   create_table "events", :force => true do |t|
     t.string   "target_type"
@@ -53,19 +53,21 @@ ActiveRecord::Schema.define(:version => 20130318212250) do
   add_index "issues", ["project_id"], :name => "index_issues_on_project_id"
   add_index "issues", ["title"], :name => "index_issues_on_title"
 
-  create_table "keys", :force => true do |t|
+  create_table "key_relationships", :force => true do |t|
+    t.integer  "key_id",     :null => false
     t.integer  "user_id"
+    t.integer  "project_id"
     t.datetime "created_at", :null => false
+  end
+
+  create_table "keys", :force => true do |t|
     t.datetime "updated_at", :null => false
     t.text     "key"
     t.string   "title"
     t.string   "identifier"
-    t.integer  "project_id"
   end
 
   add_index "keys", ["identifier"], :name => "index_keys_on_identifier"
-  add_index "keys", ["project_id"], :name => "index_keys_on_project_id"
-  add_index "keys", ["user_id"], :name => "index_keys_on_user_id"
 
   create_table "merge_requests", :force => true do |t|
     t.string   "target_branch",                       :null => false

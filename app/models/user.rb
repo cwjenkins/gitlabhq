@@ -58,7 +58,8 @@ class User < ActiveRecord::Base
     conditions: 'type IS NULL'
 
   # Profile
-  has_many :keys, dependent: :destroy
+  has_many :key_relationships
+  has_many :keys, :through => :key_relationships, dependent: :destroy
 
   # Groups
   has_many :groups, class_name: "Group", foreign_key: :owner_id
