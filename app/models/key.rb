@@ -54,7 +54,7 @@ class Key < ActiveRecord::Base
   end
 
   def is_deploy_key
-    user.nil? && key_relationships[0].project.present?
+    key_relationship.blank? && key_relationships.any?
   end
 
   def projects
@@ -70,11 +70,15 @@ class Key < ActiveRecord::Base
   end
 
   def no_relationships?
-    Key.joins(:key_relationships).where('key_id=?',self.id).count() == 0
+    key_relationships.any?
   end
 
   def created_at
-      key_relationship.created_at
+    key_relationship.created_at
+  end
+
+  def available_for? project
+    projects.find_by_id(project).present?
   end
 
   #Select only one relationship for each deploy key. 

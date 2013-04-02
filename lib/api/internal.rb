@@ -24,7 +24,7 @@ module Gitlab
         git_cmd = params[:action]
 
         if key.is_deploy_key
-          key.project_ids.include?(project.id) && git_cmd == 'git-upload-pack'
+          key.available_for?(project.id) && git_cmd == 'git-upload-pack'
         else
           user = key.user
 
