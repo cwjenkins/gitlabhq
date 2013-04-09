@@ -9,5 +9,6 @@ class AddKeyRelationships < ActiveRecord::Migration
   end
 
   def down
+    drop_table :key_relationships
   end
 end

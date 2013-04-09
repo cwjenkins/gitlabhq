@@ -54,23 +54,24 @@ class Key < ActiveRecord::Base
   end
 
   def is_deploy_key
-    key_relationship.blank? && key_relationships.any?
+    key_relationships.any?
   end
 
   def projects
     if is_deploy_key
       key_relationships.each { |r| r.project }
     else
+      user = User.find 1
       user.authorized_projects
     end
   end
 
   def has_relationships?
-    !no_relationships?
+    key_relationships.any?
   end
 
   def no_relationships?
-    key_relationships.any?
+    key_relationships.empty?
   end
 
   def created_at

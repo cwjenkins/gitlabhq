@@ -1,16 +1,9 @@
 class MigrateKeyData < ActiveRecord::Migration
   def up
-    keys = Key.all
-    keys.each do |k|
-      key_rel = KeyRelationship.new
-      key_rel.key_id     = k.id
-      key_rel.user_id    = k.user_id
-      key_rel.project_id = k.project_id
-      key_rel.created_at = k.created_at
-      key_rel.save
-    end
+    execute "INSERT INTO key_relationships (key_id, user_id, project_id, created_at) SELECT id, user_id, project_id, created_at FROM `keys`"
   end
 
   def down
+    execute "INSERT INTO `keys` (id, user_id, project_id, created_at) SELECT key_id, user_id, project_id, created_at FROM key_relationships"
   end
 end

@@ -6,5 +6,8 @@ class RemoveDupColumnsInKeys < ActiveRecord::Migration
   end
 
   def down
+    add_column :keys, :created_at, :timestamp
+    add_column :keys, :user_id, :integer
+    add_column :keys, :project_id, :integer
   end
 end

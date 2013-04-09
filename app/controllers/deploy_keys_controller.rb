@@ -1,4 +1,4 @@
-class DeployKeysController < ProjectResourceController
+class DeployKeysController < ApplicationController#ProjectResourceController
   respond_to :html
 
   # Authorize
@@ -21,12 +21,14 @@ class DeployKeysController < ProjectResourceController
   end
 
   def create
-    @key = Key.new(params[:key])
+    @key = @project.deploy_keys.build(params[:key])#Key.new(params[:key])
     @key.project_ids = [@project.id]
 
     if @key.save
       redirect_to project_deploy_keys_path(@project)
     else
+      p @key.errors
+      p @project.errors
       render "new"
     end
   end

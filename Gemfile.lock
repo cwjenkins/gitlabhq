@@ -115,6 +115,7 @@ GEM
     coffee-script-source (1.4.0)
     colored (1.2)
     colorize (0.5.8)
+    columnize (0.3.6)
     connection_pool (1.0.0)
     coveralls (0.6.2)
       colorize
@@ -126,6 +127,12 @@ GEM
     daemons (1.1.9)
     database_cleaner (0.9.1)
     debug_inspector (0.0.2)
+    debugger (1.5.0)
+      columnize (>= 0.3.1)
+      debugger-linecache (~> 1.2.0)
+      debugger-ruby_core_source (~> 1.2.0)
+    debugger-linecache (1.2.0)
+    debugger-ruby_core_source (1.2.0)
     descendants_tracker (0.0.1)
     devise (2.2.3)
       bcrypt-ruby (~> 3.0)
@@ -510,6 +517,7 @@ DEPENDENCIES
   colored
   coveralls
   database_cleaner
+  debugger
   devise
   draper
   email_spec

@@ -141,7 +141,7 @@ group :development do
   # Better errors handler
   gem 'better_errors'
   gem 'binding_of_caller'
-
+  gem 'debugger'
   gem 'rails_best_practices'
 
   # Docs generator
