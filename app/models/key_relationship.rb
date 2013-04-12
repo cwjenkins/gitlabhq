@@ -11,6 +11,11 @@
 
 class KeyRelationship < ActiveRecord::Base
   attr_accessible :key_id, :user_id, :project_id
+
+  validates :key, presence: true
+  validates :user, presence: true, if: -> { project.blank? }
+  validates :project, presence: true, if: -> { user.blank? }
+
   belongs_to :key, :dependent => :destroy
   belongs_to :project
   belongs_to :user

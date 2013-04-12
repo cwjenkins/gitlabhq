@@ -1,7 +1,6 @@
 class KeyRelationshipsController < ProjectResourceController
   def create
-    rel = KeyRelationship.new(params[:rel])
-    rel.save
+    rel = KeyRelationship.create(params[:rel])
     
     redirect_to project_deploy_keys_path(@project)
   end

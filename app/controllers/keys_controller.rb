@@ -17,9 +17,7 @@ class KeysController < ApplicationController
   end
 
   def create
-    @key = current_user.keys.new(params[:key])
-    @key.build_key_relationship(user_id: current_user.id)
-    @key.save
+    @key = current_user.keys.create(params[:key])
 
     respond_with(@key)
   end

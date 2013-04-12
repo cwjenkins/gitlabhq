@@ -52,7 +52,7 @@ class Project < ActiveRecord::Base
   has_many :notes,              dependent: :destroy
   has_many :snippets,           dependent: :destroy
   has_many :key_relationships
-  has_many :deploy_keys, :through => :key_relationships, :source => :key, dependent: :destroy
+  has_many :deploy_keys, :through => :key_relationships, :source => :key
   has_many :hooks,              dependent: :destroy, class_name: "ProjectHook"
   has_many :wikis,              dependent: :destroy
   has_many :protected_branches, dependent: :destroy

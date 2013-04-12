@@ -13,7 +13,7 @@ require 'digest/md5'
 
 class Key < ActiveRecord::Base
   attr_accessible :key, :title, :project_ids
-  
+
   #UserKey
   has_one  :key_relationship
   has_one  :user, :through => :key_relationship
@@ -78,8 +78,8 @@ class Key < ActiveRecord::Base
     key_relationship.created_at
   end
 
-  def available_for? project
-    projects.find_by_id(project).present?
+  def available_for? project_id
+    projects.find(project_id).present?
   end
 
   #Select only one relationship for each deploy key. 

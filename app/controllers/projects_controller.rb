@@ -57,7 +57,7 @@ class ProjectsController < ProjectResourceController
 
     respond_to do |format|
       format.html do
-        if @project.repository && !@project.repository.empty?
+        if @project.repository && @project.repository.present?
           @last_push = current_user.recent_push(@project.id)
           render :show
         else

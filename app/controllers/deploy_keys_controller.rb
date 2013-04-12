@@ -1,4 +1,4 @@
-class DeployKeysController < ApplicationController#ProjectResourceController
+class DeployKeysController < ApplicationController
   respond_to :html
 
   # Authorize
@@ -10,8 +10,7 @@ class DeployKeysController < ApplicationController#ProjectResourceController
   end
 
   def show
-    @rel = KeyRelationship.find(params[:id])
-    @key = @rel.key
+    @key = KeyRelationship.find(params[:id]).key
   end
 
   def new
@@ -21,21 +20,14 @@ class DeployKeysController < ApplicationController#ProjectResourceController
   end
 
   def create
-    @key = @project.deploy_keys.build(params[:key])#Key.new(params[:key])
-    @key.project_ids = [@project.id]
+    @key = @project.deploy_keys.create(params[:key])
 
-    if @key.save
-      redirect_to project_deploy_keys_path(@project)
-    else
-      p @key.errors
-      p @project.errors
-      render "new"
-    end
+    redirect_to project_deploy_keys_path(@project)
   end
 
   def destroy
     @key = Key.find(params[:id])
-    @key.destroy unless @key.has_relationships?
+    @key.destroy unless @key.is_deploy_key
 
     respond_to do |format|
       format.html { redirect_to project_deploy_keys_url }
