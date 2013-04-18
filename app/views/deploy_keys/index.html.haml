@@ -17,5 +17,5 @@
             %th
             %th
         - @keys.each do |key|
-          - key.key_relationships.each do |rel|
+          - key.project_relationships.each do |rel|
             = render(partial: 'show', locals: {key: key, rel: rel, project: @project})

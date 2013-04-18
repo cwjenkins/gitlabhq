@@ -1,0 +1,221 @@
+.span4.pull-left
+  %h3.pull-left.page_title
+    Keys
+
+.btn-group(style="margin-left:80px" data-toggle="buttons-checkbox")
+  %span(id="deploy_key_btn" class="btn active") Deploy Keys
+  %span(id="user_key_btn" class="btn") User Keys
+
+.pull-right(style="margin-right:30px")
+  = link_to 'New Key', new_admin_key_path, class: "btn pull-right"
+
+.clearfix
+%hr
+%br
+
+.span4
+  .ui-box
+    %h5.title
+      Unassigned Keys (#{@unassigned_keys.count})
+    %ul.well-list
+      - @unassigned_keys.each do |k|
+        %li(id="#{k.id}")
+          = link_to k.title, admin_key_path(k)
+          .pull-right
+            = link_to "Remove", [:admin, k], confirm: "REMOVE #{k.title}? This will remove it from all related projects. Are you sure?", method: "delete", class: "btn btn-small btn-remove"
+      - if @unassigned_keys.blank?
+        %p.nothing_here_message 0 unassigned keys
+      - else
+        %li.bottom
+          = paginate @unassigned_keys, param_name: :unassigned_keys_page, theme: "gitlab"
+
+.pull-left(style="text-align:center; margin-left:100px; margin-right:70px")
+  %h4
+    Current Selected Key
+  %div(id="current-key" style="width:180px; font-size:16px")  
+    No key is currently selected. Please click on a key.
+  %br
+  %br
+  = button_to "Update Keys", {action: "mass_update"}, {confirm: "Are you sure you want to update changed key(s)?", form: {id: "submit-form"}, id: "submit-btn"}
+
+= render partial: "deploy_keys"
+
+.clearfix
+%hr
+
+= render partial: "projects"
+
+:javascript
+  
+  // This is Jeff Walden's array.remove function, he receives all credit. 
+  // You can find this function in the comments section here. http://ejohn.org/blog/javascript-array-remove/#postcomment
+  Array.prototype.remove = function(from, to){
+    this.splice(from, !to || 1 + to - from + (!(to < 0 ^ from >= 0) && (to < 0 || -1) * this.length));
+    return this.length;
+  };
+  // END
+
+  var $current_key = $('#current-key');
+  var $submit_form = $('#submit-form');
+  var $update_btn  = $('#submit-btn');
+  var isDeployKeys = true;
+
+  function Key(id, user_id, project_id) {
+    this.id         = id;
+    this.add_ids    = [];
+    this.remove_ids = [];
+  }
+
+  var janitor       = [];
+
+  $(document).ready(function(){
+    $('.span4 ul').on('click', 'li:not(:last-child)', onclickForKeys);
+    $('#deploy_key_btn').click(toggleDeployUserBtns);
+    $('#user_key_btn').click(toggleDeployUserBtns);
+    $('.span10').on('click', '[name="assignUnassignButton"]', onclickForAssignUnassignButtons);
+    $update_btn.addClass('hide btn btn-primary');
+    $submit_form.submit(insertKeysIntoSubmitForm);
+  });
+  
+  //////////////////////////////////////////////////
+
+  function setCurrentKey() {
+    $current_key.html($('a', this).html());
+    $current_key.data('current-key-id', this.id);
+    $('.current-key').removeClass('current-key');
+    $(this).addClass('current-key');
+  }
+
+  function _updateAssignUnassignButtonHelper(row, related_project_ids, key) {
+    var related_id = isDeployKeys ? $(row).data('project-id') : $(row).data('user-id');
+    var isAssign = (related_project_ids.indexOf(related_id) === -1);
+    var isActive = (key && (key.add_ids.indexOf(related_id) > -1 || key.remove_ids.indexOf(related_id) > -1));
+    var $btn     = $('div a', row);
+    $btn.removeClass('hide');
+  
+    if(isAssign)
+      $btn.html('Assign').removeClass('btn-remove');
+    else
+      $btn.html('UnAssign').addClass('btn-remove');
+      
+    if(isActive)
+      $btn.addClass('active');
+    else
+      $btn.removeClass('active');
+  }
+
+  // Grab current key id, find in janitor, check if THIS btn needs to be active or not
+  function updateAssignUnassignButtons(related_projects) {
+    var related_project_ids = $(this).attr('data-related-project-ids') || '';
+    var key = janitor[_getIndexOfKey($current_key.data('current-key-id'))];
+    $('.span10 ul li:not(:last-child)').each(function(i, el){_updateAssignUnassignButtonHelper(el,related_project_ids, key);});
+  }
+
+  function onclickForKeys() {
+    setCurrentKey.call(this);
+    updateAssignUnassignButtons.call(this);
+  }
+
+  ////////////////////////////////////////
+
+  function toggleDeployUserBtns() {
+    isDeployKeys = (this.id === 'deploy_key_btn');
+    var id = isDeployKeys ? 'user_key_btn' : 'deploy_key_btn';
+
+    $('#'+id).removeClass('active');
+  }
+  
+  function _getIndexOfKey(id)
+  {
+    for(var i = 0, z = janitor.length; i < z; i++)
+      if(id === janitor[i].id)
+        return i;
+
+    return -1;
+  }
+
+  function showHideUpdateBtn() {
+    if(janitor.length > 0)
+      $update_btn.removeClass('hide');
+    else 
+      $update_btn.addClass('hide');
+  }
+
+  function _manageKeyHelper(index, related_id) {
+    var key = janitor[index];
+
+    // Remove related_id if button IS pressed (active == pressed) else add it.
+    if($(this).hasClass('active')) {
+      if($(this).html() === 'Assign')
+        key.add_ids.remove(key.add_ids.indexOf(related_id));
+      else
+        key.remove_ids.remove(key.remove_ids.indexOf(related_id));
+    } else {
+      if($(this).html() === 'Assign')
+        key.add_ids.push(related_id);
+      else
+        key.remove_ids.push(related_id);
+    }
+  }
+
+  function manageKey() {
+    var id         = $current_key.data('current-key-id');
+    var row        = $(this).parent().parent();
+    var related_id = isDeployKeys ? row.data('project-id') : row.data('user-id');
+    var indexOfKey = _getIndexOfKey(id);
+
+    // Create key if none exist
+    if(indexOfKey === -1) { 
+      janitor.push(new Key(id));
+      indexOfKey = janitor.length-1;
+    }
+
+    _manageKeyHelper.call(this, indexOfKey, related_id);
+    
+    // Remove key if it has no related_ids
+    if(janitor[indexOfKey].add_ids.length === 0 && 
+       janitor[indexOfKey].remove_ids.length === 0)
+      janitor.remove(indexOfKey);
+
+    showHideUpdateBtn();
+  }
+ 
+  function onclickForAssignUnassignButtons() {
+    manageKey.call(this);
+  }
+
+  function _createKeyIdsInput(key_ids) {
+    var input   = document.createElement('input');
+    input.name  = 'key[ids][]';
+    input.value = key_ids;
+    return input;
+  }
+
+  function _createIsDeployKeysInput() {
+    var input   = document.createElement('input');
+    input.name  = 'isDeployKeys';
+    input.value = isDeployKeys;
+    return input;
+  }
+
+  function _createRelatedIdsInput(id, ids, action) {
+    var input   = document.createElement('input');
+    var name    = action + '[key-' + id + '][]';
+    input.name  = name;
+    input.value = ids;
+    return input;
+  }
+
+  function insertKeysIntoSubmitForm() {
+    var key_ids = [];
+
+    for(var i = 0, z = janitor.length; i < z; i++) {
+      $submit_form.append(_createRelatedIdsInput(janitor[i].id, janitor[i].add_ids, 'add'));
+      $submit_form.append(_createRelatedIdsInput(janitor[i].id, janitor[i].remove_ids, 'remove'));
+      key_ids.push(janitor[i].id);
+    }
+
+    $submit_form.append(_createKeyIdsInput(key_ids));    
+    $submit_form.append(_createIsDeployKeysInput()); 
+    ($submit_form).addClass('hide');
+  }

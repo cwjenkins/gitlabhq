@@ -94,6 +94,12 @@ Gitlab::Application.routes.draw do
         resources :members, only: [:edit, :update, :destroy]
       end
     end
+    
+    resources :keys do
+      collection do
+        post :mass_update 
+      end
+    end
 
     root to: "dashboard#index"
   end

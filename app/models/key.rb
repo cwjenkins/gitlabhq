@@ -15,16 +15,18 @@ class Key < ActiveRecord::Base
   attr_accessible :key, :title, :project_ids
 
   #UserKey
-  has_one  :key_relationship
-  has_one  :user, :through => :key_relationship
-  delegate :user_id, :to => :key_relationship
+  has_one  :user_relationship, class_name: "KeyRelationship"
+  has_one  :user, :through => :user_relationship
+  delegate :user_id, :to => :user_relationship
 
   #DeployKey
-  has_many :key_relationships 
-  has_many :projects, :through => :key_relationships
+  has_many :project_relationships, class_name: "KeyRelationship"
+  has_many :projects, :through => :project_relationships
   before_destroy :no_relationships?
 
-  scope :deploy_keys, Key.joins(:key_relationships).where('key_relationships.project_id IS NOT NULL').group(:key_id)
+  scope :user_keys,       Key.joins(:user_relationship).where('key_relationships.project_id IS NULL').group(:key_id)
+  scope :deploy_keys,     Key.joins(:project_relationships).where('key_relationships.user_id IS NULL').group(:key_id)
+  scope :unassigned_keys, Key.where("NOT EXISTS (select * from key_relationships r where r.key_id=`keys`.id)")
 
   before_validation :strip_white_space
 
@@ -54,28 +56,24 @@ class Key < ActiveRecord::Base
   end
 
   def is_deploy_key
-    key_relationships.any?
+    project_relationships.any?
+  end
+
+  def no_relationships?
+    project_relationships.empty?
+  end
+
+  def created_at
+    (user_relationship && user_relationship.created_at || updated_at)
   end
 
   def projects
     if is_deploy_key
-      key_relationships.each { |r| r.project }
+      project_relationships.each { |r| r.project }
     else
       user = User.find 1
       user.authorized_projects
     end
-  end
-
-  def has_relationships?
-    key_relationships.any?
-  end
-
-  def no_relationships?
-    key_relationships.empty?
-  end
-
-  def created_at
-    key_relationship.created_at
   end
 
   def available_for? project_id
@@ -86,12 +84,26 @@ class Key < ActiveRecord::Base
   #If the current project has a deploy key show it instead of another
   def remove_dups project
       if project_ids.include? project.id
-        key_relationships.select! { |r| r.project_id == project.id }
+        project_relationships.select! { |r| r.project_id == project.id }
       else
         #This deploy key isn't related to the current project so just pick the first one.
         first_id = key_relationships[0].project_id 
-        key_relationships.select! { |r| r.project_id == first_id }
+        project_relationships.select! { |r| r.project_id == first_id }
       end
+  end
+
+  def self.mass_update params
+    key_ids          = params['key']['ids'][0].split(',')  
+    related_ids      = params['isDeployKeys'] ? 'project_ids' : 'user_id'
+
+    key_ids.each { |key_id|
+      key              = Key.find key_id
+      existing_ids     = key.send(related_ids)
+      add_ids          = params['add']['key-' + key_id][0].split(',').map(&:to_i)
+      remove_ids       = params['remove']['key-' + key_id][0].split(',').map(&:to_i)
+      update_ids       = ((existing_ids + add_ids) - remove_ids)
+      key.update_attributes(related_ids => update_ids)
+    }
   end
 
   def shell_id

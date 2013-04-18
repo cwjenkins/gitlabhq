@@ -1,0 +1,20 @@
+.span10(style="margin-left:100px")
+  .ui-box
+    %h5.title
+      Projects (#{@projects.count})
+    %ul.well-list
+      - @projects.each do |project|
+        %li(data-project-id="#{project.id}")
+          - if project.public
+            %i.icon-share
+          - else
+            %i.icon-lock.cgreen
+          = link_to project.name_with_namespace, [:admin, project]
+          .pull-right(name='toggle-key' data-toggle='buttons-checkbox')
+            %a.hide.btn(name='assignUnassignButton')
+              Assign
+      - if @projects.blank?
+        %p.nothing_here_message 0 projects matches
+      - else
+        %li.bottom
+          = paginate @projects, param_name: :projects_page, theme: "gitlab"

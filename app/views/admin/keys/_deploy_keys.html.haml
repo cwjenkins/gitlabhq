@@ -1,0 +1,16 @@
+.pull-left
+  .span4
+    .ui-box
+      %h5.title
+        Deploy Keys (#{@deploy_keys.count.size})
+      %ul.well-list
+        - @deploy_keys.each do |k|
+          %li(id="#{k.id}" data-related-project-ids="#{k.project_ids.join(',')}")
+            = link_to k.title, admin_key_path(k)
+            .pull-right
+              = link_to "Remove", [:admin, k], confirm: "REMOVE #{k.title}? This will remove it from all related projects. Are you sure?", method: "delete", class: "btn btn-small btn-remove"
+        - if @deploy_keys.blank?
+          %p.nothing_here_message 0 deploy keys
+        - else
+          %li.bottom
+            = paginate @deploy_keys, param_name: :deploy_keys_page, theme: "gitlab"

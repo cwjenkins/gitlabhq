@@ -1,0 +1,16 @@
+.pull-right
+  .span4
+    .ui-box
+      %h5.title
+        User Keys (#{@user_keys.count.size})
+      %ul.well-list
+        - @user_keys.each do |k|
+          %li
+            = link_to k.title, admin_key_path(k)
+            .pull-right
+              = link_to "Remove", [:admin, k], confirm: "REMOVE #{k.title}? This will remove it from all related projects. Are you sure?", method: "delete", class: "btn btn-small btn-remove"
+      - if @user_keys.blank?
+        %p.nothing_here_message 0 user keys
+      - else
+        %li.bottom
+          = paginate @user_keys, param_name: :user_keys_page, theme: "gitlab"

@@ -10,7 +10,8 @@ class DeployKeysController < ApplicationController
   end
 
   def show
-    @key = KeyRelationship.find(params[:id]).key
+    @rel = KeyRelationship.find(params[:id])
+    @key = @rel.key
   end
 
   def new
